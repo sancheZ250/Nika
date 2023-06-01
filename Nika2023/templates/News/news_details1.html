@@ -1,0 +1,197 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}
+{{ news.title }} - Новости
+{% endblock %}
+{% block head %}
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/js.cookie.min.js' %}"></script>
+<style>
+        .slider-container {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    max-height: 50vh; /* Задайте нужное значение высоты контейнера */
+}
+
+        .slider-wrapper {
+    display: flex;
+    height: 100%;
+}
+
+        .slider-slide {
+    flex-shrink: 0;
+    width: 100%;
+    height: 100%;
+}
+.slider-slide img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Масштабирование изображения, чтобы оно влезло в контейнер */
+}
+
+        .slider-slide:first-child {
+            display: block;
+        }
+
+        .slider-prev, .slider-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            text-align: center;
+            font-size: 24px;
+            line-height: 50px;
+            cursor: pointer;
+        }
+
+        .slider-prev {
+            left: 0;
+        }
+
+        .slider-next {
+            right: 0;
+        }
+
+
+
+</style>
+{% endblock %}
+{% block content %}
+<h1>{{ news.title }}</h1>
+<p><small class="text-muted">{{ news.date_created }}</small></p>
+{% if news.images.all %}
+<div class="slider-container">
+    <div class="slider-wrapper">
+        {% for image in news.images.all %}
+        <div class="slider-slide">
+            <img src="{{ image.image.url }}" class="img-thumbnail">
+        </div>
+        {% endfor %}
+    </div>
+    <div class="slider-nav">
+        <a class="slider-prev"></a>
+        <a class="slider-next"></a>
+    </div>
+</div>
+{% endif %}
+<p>{{ news.content }}</p>
+{% if news.comments.all %}
+<h3 class="mt-3">Комментарии:</h3>
+<ul id="comment-container" class="list-unstyled">
+    {% for comment in news.comments.all %}
+    <li>
+        <a href="{% url 'user_profile' comment.author.username %}">{{ comment.author.username }}</a>
+        <p>{{ comment.content }}</p>
+        <p><small class="text-muted">{{ comment.date_created }}</small></p>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% if user.is_authenticated %}
+<form id="comment-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-warning text-light" id="comment-submit">Добавить комментарий</button>
+</form>
+{% else %}
+<h4>Авторизуйтесь, чтобы добавлять комментарии</h4>
+{% endif %}
+<script>
+        // Объявляем переменные
+        const sliderWrapper = document.querySelector('.slider-wrapper');
+        const slides = sliderWrapper.querySelectorAll('.slider-slide');
+        const prevBtn = document.querySelector('.slider-prev');
+        const nextBtn = document.querySelector('.slider-next');
+
+        let slideIndex = 0;
+        const maxSlides = slides.length;
+
+        // Показываем первый слайд
+        showSlide();
+
+        // Следующий слайд
+        nextBtn.addEventListener('click', () => {
+            slideIndex++;
+            if (slideIndex >= maxSlides) {
+                slideIndex = 0;
+            }
+            showSlide();
+        });
+
+        // Предыдущий слайд
+        prevBtn.addEventListener('click', () => {
+            slideIndex--;
+            if (slideIndex < 0) {
+                slideIndex = maxSlides - 1;
+            }
+            showSlide();
+        });
+
+        // Функция показа слайда
+        function showSlide() {
+            for (let i = 0; i < maxSlides; i++) {
+                if (i === slideIndex) {
+                    slides[i].style.display = 'block';
+                } else {
+                    slides[i].style.display = 'none';
+                }
+            }
+        }
+
+
+
+</script>
+{% if user.is_authenticated %}
+<script>
+$(document).ready(function() {
+  $('#comment-form').submit(function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    var formData = new FormData($(this)[0]); // Get form data
+    var csrftoken = Cookies.get('csrftoken');
+    $.ajax({
+      beforeSend: function(xhr, settings) {
+        if (!this.crossDomain) {
+          xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        }
+      },
+      url: $(this).attr('action'), // Use the form's action URL
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        var currentDate = new Date();
+        var options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+        };
+        var formattedDate = currentDate.toLocaleString('en-US', options);
+        // Handle successful response (e.g., display the new comment)
+        $('#comment-form')[0].reset(); // Reset the form
+        $('#comment-container').append(
+          '<li>' +
+          '<a href="{% url 'user_profile' user.username %}">{{ user.username }}</a>' +
+          '<p>' + formData.get('content') + '</p>' +
+          '<p><small class="text-muted">'+ formattedDate +'</small></p>' +
+          '</li>'
+        );
+      },
+      error: function(xhr, status, error) {
+        // Handle error
+        console.log(error);
+      }
+    });
+  });
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% load static %}
+
+<div class="row">
+  {% if news %}
+    {% for n in news %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          {% if n.images.all %}
+            <a href="{{ n.get_absolute_url }}"><img src="{{ n.images.first.image.url }}" class="card-img-top"
+                                                     alt="{{ n.title }}"></a>
+          {% else %}
+            <a href="{{ n.get_absolute_url }}"><img src="{% static 'images/default-news-image.jpg' %}"
+                                                     class="card-img-top" alt="{{ n.title }}"></a>
+          {% endif %}
+          <div class="card-body">
+            <a href="{{ n.get_absolute_url }}" class="card-title">{{ n.title }}</a>
+            <p class="card-text"><small class="text-muted">Автор: {{ n.author.username }} | {{ n.date_created }}</small></p>
+          </div>
+        </div>
+      </div>
+
+      {% if forloop.counter|divisibleby:3 and not forloop.last %}
+        </div><div class="row">
+      {% endif %}
+
+    {% endfor %}
+  {% else %}
+    <p>Новостей пока нет.</p>
+  {% endif %}
+</div>

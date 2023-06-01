@@ -1,0 +1,114 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block head %}
+<script src="{% static 'js/search.js' %}"></script>
+<script src="{% static 'js/delete_news.js' %}"></script>
+<script src="{% static 'js/js.cookie.min.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    .page-link {
+      color: #ffffff;
+      background-color: #343a40;
+      border-color: #343a40;
+    }
+    .page-item.active .page-link {
+      background-color: #ffc107;
+      border-color: #ffc107;
+    }
+    .card {
+        height: 400px;
+        overflow: hidden;
+    }
+    .card-img-top {
+    width: 100%;
+    height: 310px;
+    object-fit: cover;
+    }
+    .delete-news-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: red;
+    font-size: 14px;
+    }
+
+</style>
+{% endblock %}
+{% block title %}Новости{% endblock %}
+
+{% block content %}
+<h1 style="text-align:center;">Новости</h1>
+
+<!-- Форма поиска -->
+<form id="search-form" class="mb-4">
+    <input type="text" id="search-input" class="form-control" placeholder="Поиск новостей">
+</form>
+
+<!-- Контейнер для результатов поиска -->
+<div id="search-results"></div>
+<div id="list_of_news" class="row">
+    {% if news %}
+    {% for n in news %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            {% if n.images.all %}
+            <a href="{{ n.get_absolute_url }}"><img src="{{ n.images.first.image.url }}" class="card-img-top"
+                                                    alt="{{ n.title }}"></a>
+            {% else %}
+            <a href="{{ n.get_absolute_url }}"><img src="{% static 'images/default-news-image.jpg' %}"
+                                                    class="card-img-top" alt="{{ n.title }}"></a>
+            {% endif %}
+            <div class="card-body">
+                <a href="{{ n.get_absolute_url }}" class="card-title">{{ n.title }}</a>
+                <p class="card-text"><small class="text-muted">Автор: {{ n.author.username }} |
+                    {{n.date_created}}</small></p>
+            </div>
+            {% if n.author == request.user %}
+            <div class="delete-news">
+                <button class="btn btn-link delete-news-btn" data-news-id="{{ n.pk }}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>Новостей пока нет.</p>
+    {% endif %}
+</div>
+{% if page_obj.has_other_pages %}
+<ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+        <a class="page-link" href="?page=1">&laquo;</a>
+    </li>
+    <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+    </li>
+    {% endif %}
+    {% for i in page_obj.paginator.page_range %}
+    {% if page_obj.number == i %}
+    <li class="page-item active">
+        <span class="page-link">{{ i }} <span class="sr-only">(current)</span></span>
+    </li>
+    {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+    <li class="page-item">
+        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+    </li>
+    {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">&rsaquo;</a>
+    </li>
+    <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+    </li>
+    {% endif %}
+</ul>
+{% endif %}
+{% endblock %}

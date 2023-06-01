@@ -1,0 +1,223 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/slick.css' %}"/>
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/slick.min.js' %}"></script>
+<script src="{% static 'js/js.cookie.min.js' %}"></script>
+<style>
+img.fullscreen {
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+max-width: 90vw;
+max-height: 90vh;
+z-index: 10000;
+cursor: pointer;
+}
+.slider-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.slider-nav button {
+  background-color: #e8e8e8;
+  border: none;
+  border-radius: 0.25rem;
+  color: #444;
+  font-size: 1.3rem;
+  outline: none;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  transition: background-color 0.3s ease-in-out;
+}
+.slider-nav button:hover {
+  background-color: #d4d4d4;
+}
+.overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.8);
+display: none;
+z-index: 9999;
+}
+
+.overlay.show {
+display: block;
+}
+
+.card-img-top:hover {
+    cursor: pointer;
+}
+
+
+</style>
+{% endblock %}
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Личный кабинет</h1>
+    <h2>{{ user.username }}</h2>
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Информация о пользователе</h5>
+        <p class="card-text">Имя: <span id="first-name">{{ user.first_name }}</span></p>
+        <p class="card-text">Фамилия: <span id="last-name">{{ user.last_name }}</span></p>
+        <p class="card-text">Дата рождения: <span id="birth-date">{{ profile.birth_date }}</span></p>
+        <p class="card-text">Телефон: <span id="phone-number">{{ profile.phone_number }}</span></p>
+      </div>
+        {% if is_own_profile %}
+        <button id="edit-button" class="btn btn-warning text-light">Изменить информацию</button>
+        {% endif %}
+    </div>
+  </div>
+{% if is_own_profile %}
+<form id="profile-form" style="display: none;" action="{% url 'profile_update' %}">
+    {% csrf_token %}
+    <input type="text" name="first_name" id="first-name-input" value="{{ user.first_name }}" required>
+    <input type="text" name="last_name" id="last-name-input" value="{{ user.last_name }}" required>
+    <input type="text" name="phone_number" id="phone-number-input" value="{{ profile.phone_number }}" required>
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <button type="button" id="cancel-button" class="btn btn-light">Отмена</button>
+</form>
+<p id="update-message"></p>
+<a class="btn btn-warning text-light" href="{% url 'pass_refresh' %}">Сменить пароль</a>
+{% endif %}
+<h3>Фотографии</h3>
+<div class="slider">
+    {% for photo in user.userphoto_set.all %}
+    <div class="slide">
+        <img class="card-img-top" src="{{ photo.image.url }}" alt="User photo"
+             onclick="openFullScreenImage('{{ photo.image.url }}')">
+    </div>
+    {% endfor %}
+</div>
+<div class="slider-nav">
+    <button class="slick-prev">Предыдущее фото</button>
+    <button class="slick-next">Следущее фото</button>
+</div>
+
+{% if form %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit" class="btn btn-warning text-light">Загрузить</button>
+</form>
+{% endif %}
+<script>
+function openFullScreenImage(imageUrl) {
+// создаем элемент для затемнения страницы
+var overlay = document.createElement("div");
+overlay.classList.add("overlay");
+document.body.appendChild(overlay);
+
+// добавляем класс "show" к элементу overlay
+overlay.classList.add("show");
+
+// создаем элемент для отображения изображения
+var img = document.createElement("img");
+img.setAttribute("src", imageUrl);
+img.classList.add("fullscreen");
+document.body.appendChild(img);
+
+// закрываем полноэкранный режим при клике на затемненную область или на изображение
+overlay.addEventListener("click", closeFullScreenImage);
+img.addEventListener("click", closeFullScreenImage);
+
+function closeFullScreenImage() {
+overlay.parentNode.removeChild(overlay);
+img.parentNode.removeChild(img);
+}
+}
+</script>
+<script>
+function closeForm() {
+  // Показать информацию и скрыть форму
+        $('#first-name').show();
+        $('#last-name').show();
+        $('#birth-date').show();
+        $('#phone-number').show();
+        $('#profile-form').hide();
+}
+
+function openForm() {
+        $('#first-name').hide();
+        $('#last-name').hide();
+        $('#birth-date').hide();
+        $('#phone-number').hide();
+        $('#profile-form').show();
+}
+
+function updateProfileData() {
+    var firstName = $('#first-name-input').val();
+    var lastName = $('#last-name-input').val();
+    var phoneNumber = $('#phone-number-input').val();
+
+    $('#first-name').text(firstName);
+    $('#last-name').text(lastName);
+    $('#phone-number').text(phoneNumber);
+  }
+
+$(document).ready(function() {
+    $('.slider').slick({
+      dots: false,
+      infinite: true,
+      speed: 300,
+      slidesToShow: 3,
+      slidesToScroll: 1,
+      appendArrows: $('.slider-nav'),
+      prevArrow: $('.slick-prev'),
+      nextArrow: $('.slick-next'),
+      swipe: false
+      });
+    $('#edit-button').on('click', openForm);
+
+    // При нажатии на кнопку "Отмена"
+    $('#cancel-button').on('click', closeForm);
+    $('#profile-form').on('submit', function(e) {
+        e.preventDefault(); // Предотвращение отправки формы по умолчанию
+
+        // Получение CSRF-токена из cookie
+        var csrftoken = Cookies.get('csrftoken');
+
+        // Получение данных из формы
+        var formData = $(this).serialize();
+
+        // Отправка AJAX запроса на сервер
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            beforeSend: function(xhr, settings) {
+                // Добавление CSRF-токена в заголовок запроса
+                xhr.setRequestHeader('X-CSRFToken', csrftoken);
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Вывод сообщения об успешном обновлении данных
+                    $('#update-message').text('Данные успешно обновлены');
+                    closeForm();
+                    updateProfileData();
+
+                } else {
+                    // Вывод сообщения об ошибке при обновлении данных
+                    $('#update-message').text('Ошибка при обновлении данных');
+                }
+            },
+            error: function() {
+                // Вывод сообщения об ошибке при выполнении AJAX запроса
+                $('#update-message').text('Ошибка при выполнении запроса');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
