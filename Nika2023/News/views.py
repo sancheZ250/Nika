@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import etag
 from django.views.generic import ListView, DetailView
 from django.shortcuts import render
 from django.db.models import Q
@@ -44,6 +47,10 @@ class NewsDetailView(DetailView):
     model = News
     template_name = 'News/news_details.html'
     context_object_name = 'news'
+
+    @method_decorator(cache_page(15))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
