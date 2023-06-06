@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.models import User
+from django.views.decorators.cache import cache_page
+
 from .forms import UserRegistrationForm, UserPhotoForm
 from .models import Profile, UserPhoto
 from django.shortcuts import render, redirect
@@ -43,7 +45,7 @@ def logout_view(request):
     logout(request)
     return render(request, 'base/base.html')
 
-
+@cache_page(20)
 def profile_view(request, username):
     user = User.objects.get(username=username)
     profile = Profile.objects.get(user=user)
