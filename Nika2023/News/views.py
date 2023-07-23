@@ -16,10 +16,14 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .serializers import NewsSerializer
 
+class NewsAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
 
 class NewsAPIListCreateView(generics.ListCreateAPIView):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
+
 def add_news(request):
     if request.user.is_staff:
         if request.method == 'POST':
