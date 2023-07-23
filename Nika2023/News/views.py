@@ -6,12 +6,20 @@ from django.views.decorators.http import etag
 from django.views.generic import ListView, DetailView
 from django.shortcuts import render
 from django.db.models import Q
+from rest_framework import generics
+
 from .models import News, NewsImage, Comment
 from .forms import NewsForm, CommentForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from .serializers import NewsSerializer
+
+
+class NewsAPIListCreateView(generics.ListCreateAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
 def add_news(request):
     if request.user.is_staff:
         if request.method == 'POST':
