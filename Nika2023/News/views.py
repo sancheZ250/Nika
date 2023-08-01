@@ -14,12 +14,14 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from .permissions import IsAdminOrReadOnly
 from .serializers import NewsSerializer
 
 
 class NewsViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 # class NewsAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
 #     queryset = News.objects.all()

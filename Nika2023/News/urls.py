@@ -1,6 +1,5 @@
 
 from django.urls import re_path, path, include
-
 from .views import add_news, NewsListView, NewsDetailView, search_news_view, delete_news, NewsViewSet
 from rest_framework import routers
 
@@ -14,5 +13,6 @@ urlpatterns = [
     path('delete/<int:pk>/', delete_news, name='delete_news'),
     # path('api/v1/newslist/', NewsViewSet.as_view({'get': 'list'})),
     # path('api/v1/newslist/<int:pk>/', NewsViewSet.as_view({'put': 'update'})),
-    path('api/v1/', include(router.urls))
+    path('api/v1/', include(router.urls)),
+    path('api/v1/drf-auth/', include('rest_framework.urls'))
 ]
