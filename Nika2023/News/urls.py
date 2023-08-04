@@ -15,6 +15,6 @@ urlpatterns = [
     # path('api/v1/newslist/<int:pk>/', NewsViewSet.as_view({'put': 'update'})),
     path('api/v1/', include(router.urls)),
     path('api/v1/drf-auth/', include('rest_framework.urls')),
-    path('api/v1/auth/', include('djoser.urls')), #djoser-auth by token
+    path('api/v1/auth/', include('djoser.urls')), #djoser-auth by tokens
     re_path(r'^auth/', include('djoser.urls.authtoken')),
 ]
